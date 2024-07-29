@@ -11,13 +11,28 @@ import mimetypes
 from PIL import Image
 from io import BytesIO
 import os
+from dotenv import load_dotenv
 
+# Load environment variables from .env file if present
+load_dotenv()
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
 # Initialize the S3 client
 s3 = boto3.client('s3')
-dynamodb_client = boto3.client('dynamodb')
+# Example of getting the AWS region from environment variables
+aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+dynamodb_table_name = os.environ.get('DYNAMODB_TABLE_NAME')
+
+# Initialize DynamoDB client with region and credentials
+dynamodb_client = boto3.client(
+    'dynamodb',
+    region_name=aws_region,
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
+)
 S3_BUCKET_NAME = 'cambio-coding-challenge'
 DYNAMODB_TABLE_NAME = 'TextScan'
 
