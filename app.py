@@ -3,6 +3,7 @@ USAGE: python3 app.py
 - backend built with flask to handle api requests
 """
 
+import io
 from flask import Flask, request, jsonify
 import boto3
 import requests
@@ -38,8 +39,8 @@ DYNAMODB_TABLE_NAME = 'TextScan'
 
 def get_text_content(file_name, eTag):
     try:
-        print(file_name)
-        print(eTag)
+        # print(file_name)
+        # print(eTag)
         response = dynamodb_client.get_item(
             TableName=DYNAMODB_TABLE_NAME,
             Key={
@@ -49,9 +50,9 @@ def get_text_content(file_name, eTag):
             },
             ProjectionExpression="TextContent",
         )
-        print(response)
+        # print(response)
         if 'Item' in response:
-            print("FOUND MATCH!")
+            # print("FOUND MATCH!")
             return response['Item']['TextContent']['S']
         else:
             return None
@@ -165,8 +166,11 @@ def upload():
         response = requests.get(file, stream=True)
         if response.status_code == 200:
             short_name = file.split('/')[-1][11:]
-            # short_name = long_file_name[11:]
-            s3.upload_fileobj(response.raw, S3_BUCKET_NAME, short_name)
+            try:
+                s3.put_object(Bucket=S3_BUCKET_NAME, Key=short_name, Body=response.content)
+            except Exception as e:
+                print(f"An error occurred: {e}")
+            
             uploaded_files.append(short_name)
             print("successfully upload file:", short_name)
         else:
@@ -176,7 +180,7 @@ def upload():
     return jsonify(uploaded_files)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port)
     # app.run(debug=True)
     # fetch_file_details()
