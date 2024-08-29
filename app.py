@@ -153,31 +153,28 @@ def get_data():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    # Get the list of URLs from the request body
-    files = request.json['urls']
-    print(files)
-    if not files:
-        return jsonify({"message": "No URLs provided"}), 400
-    
-    uploaded_files = []
+    print("HELLO")
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in the request'}), 400
+
+    files = request.files.getlist('file')  # Get list of files
 
     for file in files:
-        # send data to s3
-        response = requests.get(file, stream=True)
-        if response.status_code == 200:
-            short_name = file.split('/')[-1][11:]
-            try:
-                s3.put_object(Bucket=S3_BUCKET_NAME, Key=short_name, Body=response.content)
-            except Exception as e:
-                print(f"An error occurred: {e}")
-            
-            uploaded_files.append(short_name)
-            print("successfully upload file:", short_name)
-        else:
-            return jsonify({"message": "failed to upload file"}), 400
+        print(file.read())
+        file.seek(0)  # Reset file pointer to the beginning if you need to read it again
+        try:
+            s3.upload_fileobj(
+                file,  # Pass the file object directly
+                S3_BUCKET_NAME,
+                file.filename,  # Use the file's name as the key in S3
+                ExtraArgs={
+                    "ContentType": file.content_type
+                }
+            )
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
-    # Return a success response
-    return jsonify(uploaded_files)
+    return jsonify({'message': 'Files received successfully'}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
