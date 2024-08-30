@@ -1,5 +1,5 @@
 ## Demo Link
-- [Try it!](https://textscanner.vercel.app/)
+- [try it out!](https://textscanner.vercel.app/)
 
 ## Video Walkthrough
 - [YouTube](https://youtu.be/yLmyKW0Vsfs)
